@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Number Series Practice</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --border:#e2e4e9; --border-strong:#c9cdd6;
+    --text:#1b1d22; --text-secondary:#5b6070; --text-muted:#8a8f9c;
+    --accent:#3a5bfd; --accent-light:#eef1ff;
+    --success:#1c9d5f; --success-light:#e6f7ee;
+    --danger:#e0473f; --danger-light:#fdecec;
+    --radius:10px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); min-height:100vh;}
+  .wrap{max-width:720px; margin:0 auto; padding:24px 16px 60px;}
+  h1{font-size:20px; font-weight:600; margin:0 0 4px;}
+  .sub{color:var(--text-secondary); font-size:14px; margin-bottom:24px;}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:16px;}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:10px 18px; border-radius:8px; border:1px solid var(--border-strong); background:#fff; color:var(--text); font-size:14px; font-weight:500; cursor:pointer; transition:all .15s;}
+  .btn:hover{background:#f0f1f4;}
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .btn-primary:hover{background:#2f4bdb;}
+  .btn-primary:disabled{opacity:.5; cursor:not-allowed;}
+  .btn-block{width:100%;}
+  .row{display:flex; gap:12px; flex-wrap:wrap;}
+  .option-group{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;}
+  .chip{padding:8px 16px; border-radius:20px; border:1px solid var(--border-strong); background:#fff; cursor:pointer; font-size:14px; font-weight:500;}
+  .chip.selected{background:var(--accent); border-color:var(--accent); color:#fff;}
+  label.field-label{font-size:13px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.03em; display:block; margin-bottom:8px;}
+  /* Quiz header */
+  .quiz-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px;}
+  .progress-bar{flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden;}
+  .progress-fill{height:100%; background:var(--accent); transition:width .25s;}
+  .timer{font-variant-numeric:tabular-nums; font-weight:600; font-size:14px; color:var(--text-secondary); white-space:nowrap; display:flex; align-items:center; gap:4px;}
+  .qnum{font-size:13px; color:var(--text-muted); font-weight:600; white-space:nowrap;}
+  .series-display{font-size:26px; font-weight:600; letter-spacing:.5px; text-align:center; padding:28px 12px; background:var(--accent-light); border-radius:var(--radius); margin-bottom:20px; line-height:1.6; word-spacing:6px;}
+  .qtype-badge{display:inline-block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:3px 8px; border-radius:5px; margin-bottom:12px;}
+  .qtype-wrong{background:var(--danger-light); color:var(--danger);}
+  .qtype-missing{background:var(--accent-light); color:var(--accent);}
+  input.answer-input{width:100%; padding:12px 14px; font-size:16px; border-radius:8px; border:1px solid var(--border-strong); outline:none;}
+  input.answer-input:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-light);}
+  .feedback{margin-top:14px; padding:12px 14px; border-radius:8px; font-size:14px; font-weight:500; display:none;}
+  .feedback.correct{background:var(--success-light); color:var(--success); display:block;}
+  .feedback.incorrect{background:var(--danger-light); color:var(--danger); display:block;}
+  .nav-row{display:flex; justify-content:space-between; margin-top:20px; gap:10px;}
+  /* Setup screen */
+  .num-select{display:flex; gap:8px; flex-wrap:wrap;}
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border);}
+  .toggle-row:last-child{border-bottom:none;}
+  .switch{position:relative; width:44px; height:24px; background:var(--border-strong); border-radius:12px; cursor:pointer; transition:background .15s;}
+  .switch.on{background:var(--accent);}
+  .switch::after{content:""; position:absolute; top:2px; left:2px; width:20px; height:20px; background:#fff; border-radius:50%; transition:left .15s;}
+  .switch.on::after{left:22px;}
+  /* Results */
+  .stat-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:16px 0;}
+  .stat-box{background:#f7f8fa; border-radius:8px; padding:14px; text-align:center;}
+  .stat-num{font-size:22px; font-weight:700;}
+  .stat-label{font-size:12px; color:var(--text-secondary); margin-top:2px;}
+  table.review-table{width:100%; border-collapse:collapse; font-size:13px; margin-top:8px;}
+  table.review-table th, table.review-table td{padding:8px 6px; border-bottom:1px solid var(--border); text-align:left;}
+  table.review-table th{color:var(--text-secondary); font-weight:600; font-size:11px; text-transform:uppercase;}
+  .tag-correct{color:var(--success); font-weight:600;}
+  .tag-incorrect{color:var(--danger); font-weight:600;}
+  .tag-skipped{color:var(--text-muted); font-weight:600;}
+  .nav-tabs{display:flex; gap:4px; margin-bottom:20px; background:#fff; border:1px solid var(--border); border-radius:10px; padding:4px;}
+  .nav-tab{flex:1; text-align:center; padding:8px; border-radius:7px; font-size:13px; font-weight:600; cursor:pointer; color:var(--text-secondary);}
+  .nav-tab.active{background:var(--accent-light); color:var(--accent);}
+  .history-item{display:flex; justify-content:space-between; align-items:center; padding:14px; border:1px solid var(--border); border-radius:8px; margin-bottom:8px; cursor:pointer;}
+  .history-item:hover{border-color:var(--border-strong);}
+  .history-score{font-weight:700; font-size:16px;}
+  .empty-state{text-align:center; padding:40px 16px; color:var(--text-muted);}
+  .hidden{display:none !important;}
+  .upload-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .upload-msg{font-size:12px; margin-top:8px;}
+  .upload-msg.ok{color:var(--success);}
+  .upload-msg.err{color:var(--danger);}
+  input[type=file]{font-size:13px; max-width:100%;}
+
+  @media (max-width:480px){
+    .wrap{padding:16px 12px 48px;}
+    h1{font-size:18px;}
+    .sub{font-size:13px; margin-bottom:18px;}
+    .card{padding:14px;}
+    .series-display{font-size:20px; padding:20px 8px; word-spacing:3px; letter-spacing:.2px;}
+    .quiz-header{flex-wrap:wrap;}
+    .progress-bar{order:3; width:100%; flex:none;}
+    .qnum{font-size:12px;}
+    .timer{font-size:13px;}
+    .nav-row{flex-direction:column-reverse;}
+    .nav-row .btn{width:100%; padding:12px;}
+    .stat-grid{grid-template-columns:repeat(3,1fr); gap:8px;}
+    .stat-box{padding:10px 4px;}
+    .stat-num{font-size:18px;}
+    table.review-table{display:block; overflow-x:auto; white-space:nowrap;}
+    .chip{padding:7px 12px; font-size:13px;}
+    .history-item{flex-wrap:wrap; gap:6px;}
+    input.answer-input{font-size:16px;}
+    .num-select .chip{flex:1 1 calc(50% - 8px); text-align:center;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Number series practice</h1>
+  <div class="sub">Wrong-number and missing-number series drills</div>
+
+  <div class="nav-tabs" id="navTabs">
+    <div class="nav-tab active" data-tab="setup">Practice</div>
+    <div class="nav-tab" data-tab="history">History</div>
+  </div>
+
+  <!-- SETUP SCREEN -->
+  <div id="setupScreen">
+    <div class="card">
+      <label class="field-label">Number of questions</label>
+      <div class="num-select" id="numSelect"></div>
+    </div>
+    <div class="card">
+      <div class="toggle-row">
+        <div>
+          <div style="font-weight:500;">Randomize order</div>
+          <div style="font-size:12px;color:var(--text-muted);">Shuffle question sequence each attempt</div>
+        </div>
+        <div class="switch on" id="randomToggle"></div>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div style="font-weight:500;">Question type</div>
+          <div style="font-size:12px;color:var(--text-muted);">Filter by wrong-number or missing-number</div>
+        </div>
+      </div>
+      <div class="option-group" id="typeFilter">
+        <div class="chip selected" data-type="all">All (29)</div>
+        <div class="chip" data-type="wrong">Wrong number (19)</div>
+        <div class="chip" data-type="missing">Missing number (10)</div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" id="startBtn" style="padding:14px;font-size:15px;">Start quiz</button>
+
+    <div class="card">
+      <label class="field-label">Add more questions</label>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Upload a .txt file in the same format (numbered series line, then an "ans:" line) to expand the question bank.</div>
+      <div class="upload-row">
+        <input type="file" id="fileUpload" accept=".txt">
+        <button class="btn" id="clearBankBtn">Reset to default bank</button>
+      </div>
+      <div class="upload-msg" id="uploadMsg"></div>
+    </div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="quizScreen" class="hidden">
+    <div class="quiz-header">
+      <div class="qnum" id="qnumLabel">Q1 / 10</div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="timer"><span id="timerDisplay">0:00</span></div>
+    </div>
+    <div class="card">
+      <span class="qtype-badge" id="qtypeBadge"></span>
+      <div class="series-display" id="seriesDisplay"></div>
+      <label class="field-label" id="answerLabel">Your answer</label>
+      <input type="text" inputmode="decimal" class="answer-input" id="answerInput" placeholder="Enter the number" autocomplete="off">
+      <div class="feedback" id="feedback"></div>
+    </div>
+    <div class="nav-row">
+      <button class="btn" id="skipBtn">Skip</button>
+      <button class="btn btn-primary" id="submitBtn">Submit</button>
+    </div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="resultsScreen" class="hidden">
+    <div class="card">
+      <div style="font-weight:600; font-size:16px; margin-bottom:4px;">Attempt summary</div>
+      <div style="font-size:13px; color:var(--text-muted);" id="resultDate"></div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-num" id="statCorrect" style="color:var(--success)">0</div><div class="stat-label">Correct</div></div>
+        <div class="stat-box"><div class="stat-num" id="statIncorrect" style="color:var(--danger)">0</div><div class="stat-label">Incorrect</div></div>
+        <div class="stat-box"><div class="stat-num" id="statAvgTime">0s</div><div class="stat-label">Avg time / Q</div></div>
+      </div>
+      <table class="review-table">
+        <thead><tr><th>#</th><th>Series</th><th>Your ans</th><th>Correct</th><th>Time</th><th>Result</th></tr></thead>
+        <tbody id="reviewBody"></tbody>
+      </table>
+    </div>
+    <button class="btn btn-primary btn-block" id="retryBtn" style="padding:14px;font-size:15px;">Practice again</button>
+  </div>
+
+  <!-- HISTORY SCREEN -->
+  <div id="historyScreen" class="hidden">
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_QUESTIONS = [{"id": 1, "type": "wrong", "series": "34 40 52 74 102 144 200", "answer": "74"}, {"id": 2, "type": "wrong", "series": "6 19 58 124 214 331 474", "answer": "124"}, {"id": 3, "type": "wrong", "series": "156 299 494 749 1070 1471", "answer": "1070"}, {"id": 4, "type": "wrong", "series": "16 16 23 49 112 237 451", "answer": "237"}, {"id": 5, "type": "wrong", "series": "508 640 776 925 1092 1283", "answer": "640"}, {"id": 6, "type": "wrong", "series": "1 1 7 31 89 211", "answer": "89"}, {"id": 7, "type": "wrong", "series": "34 71 97 110 124 129 131", "answer": "110"}, {"id": 8, "type": "wrong", "series": "2 12 36 80 150 251 392", "answer": "251"}, {"id": 9, "type": "wrong", "series": "50 51 47 56 45 65 29", "answer": "45"}, {"id": 10, "type": "wrong", "series": "49 66 47 70 45 72", "answer": "45"}, {"id": 11, "type": "wrong", "series": "64 51 73 42 84 33 91", "answer": "84"}, {"id": 12, "type": "wrong", "series": "-18 -16 -20 -12 -28 2 -60", "answer": "2"}, {"id": 13, "type": "wrong", "series": "35 280 40 240 50 192 64", "answer": "50"}, {"id": 14, "type": "wrong", "series": "18 10 12 20 46 120 366", "answer": "20"}, {"id": 15, "type": "wrong", "series": "7 4 6 9 20 52.5 160.5", "answer": "6"}, {"id": 16, "type": "wrong", "series": "16 4 2.5 3.5 9 40 328", "answer": "16"}, {"id": 17, "type": "wrong", "series": "20 18 39 113 457 2289", "answer": "2289"}, {"id": 18, "type": "wrong", "series": "4 6 12 30 75 315 1260", "answer": "75"}, {"id": 19, "type": "wrong", "series": "1 3 10 36 152 780 4632", "answer": "780"}, {"id": 20, "type": "missing", "series": "2 6 25 96 285 ?", "answer": "568"}, {"id": 21, "type": "missing", "series": "5 19 45 95 ? 387", "answer": "193"}, {"id": 22, "type": "missing", "series": "2 8 33 148 765 ?", "answer": "4626"}, {"id": 23, "type": "missing", "series": "4 60 325 1316 3957 ?", "answer": "7918"}, {"id": 24, "type": "missing", "series": "7 9 14 48 184 ?", "answer": "930"}, {"id": 25, "type": "missing", "series": "6 8 19 ? 255 1286", "answer": "62"}, {"id": 26, "type": "missing", "series": "9 10 22 ? 288 1456", "answer": "70"}, {"id": 27, "type": "missing", "series": "4 5 13 ? 190 965", "answer": "45"}, {"id": 28, "type": "missing", "series": "4.5 7 18 ? 335 2004", "answer": "68"}, {"id": 29, "type": "missing", "series": "17 9 10 16.5 35 ?", "answer": "90"}];
+
+const HISTORY_KEY = "ns_quiz_history_v1";
+const BANK_KEY = "ns_quiz_custom_bank_v1";
+
+let QUESTIONS = loadBank();
+
+function loadBank(){
+  try{
+    const custom = JSON.parse(localStorage.getItem(BANK_KEY));
+    if(Array.isArray(custom) && custom.length) return custom;
+  }catch(e){}
+  return DEFAULT_QUESTIONS.slice();
+}
+function saveBank(list){
+  localStorage.setItem(BANK_KEY, JSON.stringify(list));
+}
+
+// Parses text in the format:
+//   1. 34 40 52 74 102 144 200
+//   ans: 74
+// blocks separated by blank lines. Missing-number series contain "?".
+function parseQuestionsText(text){
+  const blocks = text.replace(/\r\n/g,"\n").split(/\n\s*\n/).map(b=>b.trim()).filter(Boolean);
+  const parsed = [];
+  const errors = [];
+  blocks.forEach((block, bi)=>{
+    const lines = block.split("\n").map(l=>l.trim()).filter(Boolean);
+    if(lines.length < 2){ errors.push(`Block ${bi+1}: missing series or answer line`); return; }
+    const qLine = lines[0];
+    const ansLine = lines.find(l=>/^ans\s*:/i.test(l));
+    if(!ansLine){ errors.push(`Block ${bi+1}: no "ans:" line found`); return; }
+    const seriesMatch = qLine.match(/^\d+\.\s*(.+)$/);
+    const series = seriesMatch ? seriesMatch[1].trim() : qLine.trim();
+    const answer = ansLine.split(":").slice(1).join(":").trim();
+    if(!series || !answer){ errors.push(`Block ${bi+1}: empty series or answer`); return; }
+    const type = series.includes("?") ? "missing" : "wrong";
+    parsed.push({ series, answer, type });
+  });
+  return { parsed, errors };
+}
+
+function handleFileUpload(file){
+  const msg = document.getElementById("uploadMsg");
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const { parsed, errors } = parseQuestionsText(e.target.result);
+    if(parsed.length === 0){
+      msg.className = "upload-msg err";
+      msg.textContent = "No valid questions found. Check the file format.";
+      return;
+    }
+    let nextId = QUESTIONS.reduce((m,q)=>Math.max(m,q.id),0) + 1;
+    const existingSeries = new Set(QUESTIONS.map(q=>q.series));
+    let added = 0;
+    parsed.forEach(p=>{
+      if(existingSeries.has(p.series)) return;
+      QUESTIONS.push({ id: nextId++, type: p.type, series: p.series, answer: p.answer });
+      existingSeries.add(p.series);
+      added++;
+    });
+    saveBank(QUESTIONS);
+    renderNumOptions();
+    updateTypeFilterLabels();
+    let m = `Added ${added} new question${added===1?"":"s"}. Bank now has ${QUESTIONS.length}.`;
+    if(errors.length) m += ` (${errors.length} block${errors.length===1?"":"s"} skipped)`;
+    msg.className = "upload-msg ok";
+    msg.textContent = m;
+  };
+  reader.onerror = function(){
+    msg.className = "upload-msg err";
+    msg.textContent = "Couldn't read that file.";
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById("fileUpload").addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(file) handleFileUpload(file);
+  e.target.value = "";
+});
+
+document.getElementById("clearBankBtn").onclick = function(){
+  QUESTIONS = DEFAULT_QUESTIONS.slice();
+  localStorage.removeItem(BANK_KEY);
+  renderNumOptions();
+  updateTypeFilterLabels();
+  const msg = document.getElementById("uploadMsg");
+  msg.className = "upload-msg ok";
+  msg.textContent = "Reset to the default 29-question bank.";
+};
+
+function updateTypeFilterLabels(){
+  const all = QUESTIONS.length;
+  const wrong = QUESTIONS.filter(q=>q.type==="wrong").length;
+  const missing = QUESTIONS.filter(q=>q.type==="missing").length;
+  const el = document.getElementById("typeFilter");
+  el.children[0].textContent = `All (${all})`;
+  el.children[1].textContent = `Wrong number (${wrong})`;
+  el.children[2].textContent = `Missing number (${missing})`;
+}
+
+let settings = { count: 10, randomize: true, typeFilter: "all" };
+let session = null; // current quiz session state
+
+function loadHistory(){
+  try{ return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }catch(e){ return []; }
+}
+function saveHistory(list){
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function filteredPool(){
+  if(settings.typeFilter === "all") return QUESTIONS;
+  return QUESTIONS.filter(q => q.type === settings.typeFilter);
+}
+
+// ---------- Setup screen ----------
+const numSelectEl = document.getElementById("numSelect");
+function renderNumOptions(){
+  const pool = filteredPool();
+  const maxN = pool.length;
+  const options = [5,10,15,20,29].filter(n => n <= maxN);
+  if(!options.includes(maxN)) options.push(maxN);
+  numSelectEl.innerHTML = "";
+  options.sort((a,b)=>a-b).forEach(n=>{
+    const chip = document.createElement("div");
+    chip.className = "chip" + (n === settings.count ? " selected" : "");
+    chip.textContent = n + " questions";
+    chip.dataset.n = n;
+    chip.onclick = () => {
+      settings.count = n;
+      [...numSelectEl.children].forEach(c=>c.classList.remove("selected"));
+      chip.classList.add("selected");
+    };
+    numSelectEl.appendChild(chip);
+  });
+  if(!options.includes(settings.count)){
+    settings.count = options[options.length-1];
+    renderNumOptions();
+  }
+}
+renderNumOptions();
+updateTypeFilterLabels();
+
+document.getElementById("randomToggle").onclick = function(){
+  settings.randomize = !settings.randomize;
+  this.classList.toggle("on", settings.randomize);
+};
+
+document.getElementById("typeFilter").addEventListener("click", (e)=>{
+  const chip = e.target.closest(".chip");
+  if(!chip) return;
+  settings.typeFilter = chip.dataset.type;
+  [...document.getElementById("typeFilter").children].forEach(c=>c.classList.remove("selected"));
+  chip.classList.add("selected");
+  renderNumOptions();
+});
+
+document.getElementById("startBtn").onclick = startQuiz;
+
+// ---------- Quiz logic ----------
+function startQuiz(){
+  let pool = filteredPool();
+  if(settings.randomize) pool = shuffle(pool);
+  else pool = pool.slice();
+  pool = pool.slice(0, settings.count);
+
+  session = {
+    questions: pool,
+    idx: 0,
+    answers: [], // {qid, series, type, userAnswer, correctAnswer, correct, timeMs}
+    qStartTime: null,
+    timerInterval: null
+  };
+  showScreen("quiz");
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = session.questions[session.idx];
+  document.getElementById("qnumLabel").textContent = `Q${session.idx+1} / ${session.questions.length}`;
+  document.getElementById("progressFill").style.width = `${(session.idx/session.questions.length)*100}%`;
+  const badge = document.getElementById("qtypeBadge");
+  if(q.type === "wrong"){
+    badge.textContent = "Find the wrong number";
+    badge.className = "qtype-badge qtype-wrong";
+    document.getElementById("answerLabel").textContent = "Which number is wrong?";
+  }else{
+    badge.textContent = "Find the missing number";
+    badge.className = "qtype-badge qtype-missing";
+    document.getElementById("answerLabel").textContent = "What replaces the ?";
+  }
+  document.getElementById("seriesDisplay").textContent = q.series;
+  const input = document.getElementById("answerInput");
+  input.value = "";
+  input.disabled = false;
+  document.getElementById("feedback").className = "feedback";
+  document.getElementById("feedback").textContent = "";
+  document.getElementById("submitBtn").textContent = "Submit";
+  document.getElementById("submitBtn").onclick = submitAnswer;
+  document.getElementById("skipBtn").classList.remove("hidden");
+  input.focus();
+
+  session.qStartTime = Date.now();
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(session.timerInterval);
+  const el = document.getElementById("timerDisplay");
+  function tick(){
+    const secs = Math.floor((Date.now() - session.qStartTime)/1000);
+    const m = Math.floor(secs/60), s = secs%60;
+    el.textContent = `${m}:${s.toString().padStart(2,"0")}`;
+  }
+  tick();
+  session.timerInterval = setInterval(tick, 1000);
+}
+
+function recordAnswer(userAnswer, skipped){
+  clearInterval(session.timerInterval);
+  const q = session.questions[session.idx];
+  const timeMs = Date.now() - session.qStartTime;
+  const correct = !skipped && userAnswer.trim() !== "" &&
+    Math.abs(parseFloat(userAnswer) - parseFloat(q.answer)) < 1e-9;
+  session.answers.push({
+    id: q.id, series: q.series, type: q.type,
+    userAnswer: skipped ? "" : userAnswer,
+    correctAnswer: q.answer,
+    correct: correct,
+    skipped: skipped,
+    timeMs: timeMs
+  });
+  return correct;
+}
+
+function submitAnswer(){
+  const input = document.getElementById("answerInput");
+  const val = input.value;
+  if(val.trim() === ""){ input.focus(); return; }
+  const correct = recordAnswer(val, false);
+  input.disabled = true;
+  const fb = document.getElementById("feedback");
+  const q = session.questions[session.idx];
+  if(correct){
+    fb.className = "feedback correct";
+    fb.textContent = `Correct! Answer: ${q.answer}`;
+  }else{
+    fb.className = "feedback incorrect";
+    fb.textContent = `Incorrect. Your answer: ${val} — Correct answer: ${q.answer}`;
+  }
+  document.getElementById("skipBtn").classList.add("hidden");
+  document.getElementById("submitBtn").textContent = session.idx+1 < session.questions.length ? "Next question" : "Finish quiz";
+  document.getElementById("submitBtn").onclick = advance;
+}
+
+document.getElementById("skipBtn").onclick = function(){
+  recordAnswer("", true);
+  advance();
+};
+
+function advance(){
+  session.idx++;
+  if(session.idx >= session.questions.length){
+    finishQuiz();
+  }else{
+    renderQuestion();
+  }
+}
+
+function finishQuiz(){
+  document.getElementById("progressFill").style.width = "100%";
+  const attempt = {
+    date: new Date().toISOString(),
+    total: session.answers.length,
+    correct: session.answers.filter(a=>a.correct).length,
+    incorrect: session.answers.filter(a=>!a.correct && !a.skipped).length,
+    skipped: session.answers.filter(a=>a.skipped).length,
+    avgTimeMs: Math.round(session.answers.reduce((s,a)=>s+a.timeMs,0)/session.answers.length),
+    answers: session.answers
+  };
+  const hist = loadHistory();
+  hist.unshift(attempt);
+  saveHistory(hist);
+  renderResults(attempt);
+  showScreen("results");
+}
+
+function fmtTime(ms){
+  const s = ms/1000;
+  return s < 60 ? `${s.toFixed(1)}s` : `${Math.floor(s/60)}m ${Math.round(s%60)}s`;
+}
+
+function renderResults(attempt){
+  document.getElementById("resultDate").textContent = new Date(attempt.date).toLocaleString();
+  document.getElementById("statCorrect").textContent = attempt.correct;
+  document.getElementById("statIncorrect").textContent = attempt.incorrect + attempt.skipped;
+  document.getElementById("statAvgTime").textContent = fmtTime(attempt.avgTimeMs);
+  const body = document.getElementById("reviewBody");
+  body.innerHTML = "";
+  attempt.answers.forEach((a, i)=>{
+    const tr = document.createElement("tr");
+    const resultTag = a.skipped ? '<span class="tag-skipped">Skipped</span>' : (a.correct ? '<span class="tag-correct">Correct</span>' : '<span class="tag-incorrect">Wrong</span>');
+    tr.innerHTML = `<td>${i+1}</td><td>${a.series}</td><td>${a.userAnswer || "-"}</td><td>${a.correctAnswer}</td><td>${fmtTime(a.timeMs)}</td><td>${resultTag}</td>`;
+    body.appendChild(tr);
+  });
+}
+
+document.getElementById("retryBtn").onclick = function(){
+  showScreen("setup");
+};
+
+// ---------- History screen ----------
+function renderHistory(){
+  const list = document.getElementById("historyList");
+  const hist = loadHistory();
+  if(hist.length === 0){
+    list.innerHTML = `<div class="empty-state">No attempts yet. Start a quiz to build your history.</div>`;
+    return;
+  }
+  list.innerHTML = "";
+  hist.forEach((attempt, i)=>{
+    const item = document.createElement("div");
+    item.className = "history-item";
+    const pct = Math.round((attempt.correct/attempt.total)*100);
+    item.innerHTML = `
+      <div>
+        <div style="font-weight:500;">${new Date(attempt.date).toLocaleString()}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${attempt.total} questions · avg ${fmtTime(attempt.avgTimeMs)}</div>
+      </div>
+      <div class="history-score" style="color:${pct>=70?'var(--success)':pct>=40?'#c98a1f':'var(--danger)'}">${attempt.correct}/${attempt.total}</div>
+    `;
+    item.onclick = ()=>{ renderResults(attempt); showScreen("results"); };
+    list.appendChild(item);
+  });
+}
+
+// ---------- Screen / tab navigation ----------
+function showScreen(name){
+  ["setup","quiz","results","history"].forEach(s=>{
+    document.getElementById(s+"Screen").classList.toggle("hidden", s !== name);
+  });
+  document.getElementById("navTabs").classList.toggle("hidden", name === "quiz");
+  [...document.querySelectorAll(".nav-tab")].forEach(t=>{
+    t.classList.toggle("active", (name==="setup"||name==="results") ? t.dataset.tab==="setup" : t.dataset.tab===name);
+  });
+}
+
+document.getElementById("navTabs").addEventListener("click", (e)=>{
+  const tab = e.target.closest(".nav-tab");
+  if(!tab) return;
+  if(tab.dataset.tab === "history"){ renderHistory(); showScreen("history"); }
+  else{ showScreen("setup"); }
+});
+
+document.getElementById("answerInput").addEventListener("keydown", (e)=>{
+  if(e.key === "Enter"){
+    e.preventDefault();
+    document.getElementById("submitBtn").click();
+  }
+});
+
+showScreen("setup");
+</script>
+</body>
+</html>
